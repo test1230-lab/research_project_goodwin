@@ -1,0 +1,13 @@
+# Ignore everything
+*
+
+#keep these
+!.gitignore
+!main2.cpp
+!distrib2d.cpp
+!distrib2d.h
+!ElectricField.cpp
+!ElectricField.h
+!makefile
+
+#!README.md
