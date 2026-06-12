@@ -13,11 +13,14 @@
 #include "distrib2d.h"
 #include "gnuplot-iostream.h"
 
-//NOTE: -----> CLAUDE CODE <-----
+// -----> CLAUDE CODE <-----
 // ----------------------------------------------------------------------------
 // Minimal 1-D plotter using gnuplot-iostream.
 // Empty `savefile` -> interactive window; otherwise a PNG is written.
 // ----------------------------------------------------------------------------
+
+
+
 void plot1d(const std::vector<double>& x, const std::vector<double>& y,
             const std::string& title  = "", const std::string& xlabel = "x",
             const std::string& ylabel = "y", const std::string& savefile = "")
@@ -276,7 +279,6 @@ void write_matrix(const std::string& filename, const std::vector<std::vector<dou
 }
 
 
-//need to do a lot of fucking optimization!!!
 int main()
 {
 	const double temp = 1000.0;
@@ -287,50 +289,54 @@ int main()
 	const double t2 = 1000.0;
 	const double dt = 2.0;
 
-    const double vmin = -3800.0;
-    const double vmax = 3800.0;
+    const double vmin = -3000.0;
+    const double vmax = 3000.0;
     const double dv = 10.0;
+    
 
     Distrib2D dist{vmin, vmax, dv, mass, temp, "./coeffs"};
 
-    auto start = std::chrono::steady_clock::now();
+    /*std::vector<double> times = dist.calc_times(t1, t2, dt);
+    std::vector<double> ef(times.size());
+
+    for (int i = 0; i < times.size(); i++)
+    {
+        const double t = t1 + dt*i;
+        ef[i] = dist.electric_field(t);
+    }
+
+    plot1d(times, ef, "Electric Field Magnitude", "time [s]", "|E| [mV/m]");*/
 
     std::vector<double> times = dist.calc_times(t1, t2, dt);
+    //auto start = std::chrono::steady_clock::now();
+
+    
     Distrib2D::Moments m = dist.get_moments(t1, t2, dt, dz);
     
-    std::vector<std::vector<std::vector<double>>> dists;
+    /*std::vector<std::vector<std::vector<double>>> dists;
     std::vector<std::string> titles;
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 501; i++)
     {
-        const double t = 100 + 50*i;
+        const double t = i;
         titles.push_back(std::to_string((int)t));
         dists.push_back(dist.get_f_vf_dist(t, dz));
     }
 
     auto end = std::chrono::steady_clock::now();
     uint64_t elapsed1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << elapsed1/1000.0 << "[s]\n";
+    std::cout << elapsed1/1000.0 << "[s]\n";*/
     
     const std::string param = std::format("for dz={:.1f}km", dz/1000.0);
     plot1d(times, m.density, "Density " + param, "t [s]", "Density [m^-3]");
     plot1d(times, m.avg_par_velocity, "Parallel Veloctiy " + param, "t [s]", "Velocity [m/s]");
-
-
-    //plot1d(times, m.ion_temp_par, "Ion Temp Parallel " + param, "t [s]", "Temp [K]");
-    //plot1d(times, m.ion_temp_perp, "Ion Temp Perpendicular " + param, "t [s]", "Temp [K]");
-
     plot1d_overlay(times, {m.ion_temp_par, m.ion_temp_perp},
              {"Ion Temp Parallel " + param, "Ion Temp Perpendicular " + param}, " ", "t [s]", "Temp [K]");
 
-    //const std::string title = std::format("Distribution f(v) evolution, dz={:.1f}km", dz / 1000.0);
-    //heatmap_grid(dist.get_vf_par(), dist.get_vf_perp(), dists, titles, title);
 
-
-    for (int i = 0; i < 9; i++)
+    /*for (int i = 0; i < 501; i++)
     {
         write_matrix("./output/" + titles[i] + ".dat", dists[i]);
-    }
-
+    }*/
 
 	return 0;
 }

@@ -44,6 +44,7 @@ public:
 	std::vector<double> calc_times(double t1, double t2, double dt) const;
 	const std::vector<double>& get_vf_par() const { return vf_par_vec; }
 	const std::vector<double>& get_vf_perp() const { return vf_perp_vec; }
+	double electric_field(double t) const; // [mV/m]
 
 private:
 	double vf_max, vf_min, dv, mass, temp;
@@ -57,7 +58,7 @@ private:
 	static constexpr double e_field_ramp_rate = 1.0; //1 mV/m per second
 	static constexpr double e_field_peak = 100.0; //  [mV/m]
 
-	double electric_field(double t) const; // [mV/m]
+	//double electric_field(double t) const; // [mV/m]
 
 	double maxwell_boltzmann_dist(double v) const;
 	double distribution_function(double v, double n, double t, int angle) const;
@@ -74,11 +75,11 @@ private:
 	double calc_avg_velocity_par(double t, double dz, double density) const;
 	double calc_avg_velocity_perp(double t, double dz, double density) const;
 
-	double calc_ion_temp_par(double t, double dz, double density, double avg_velocity) const;
-	double calc_ion_temp_perp(double t, double dz, double density, double avg_velocity) const;
+	double calc_ion_temp_par(double t, double dz, double density, double avg_vel_par, double avg_vel_perp) const;
+	double calc_ion_temp_perp(double t, double dz, double density, double avg_vel_par, double avg_vel_perp) const;
 	
 };
-
+//2d shit do it ok
 
 
 /*

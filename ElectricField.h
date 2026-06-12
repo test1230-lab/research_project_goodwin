@@ -20,7 +20,7 @@
 class ElectricField
 {
 public:
-    ElectricField(std::string directory)
+    ElectricField(std::string directory) : e_interp_coeffs{}, ion_speed_interp_table{}, e_coeff_interp_table{}
     {
         this->dir = directory;
         this->n_files = num_files();
@@ -33,8 +33,10 @@ public:
 
     double compute_dist_discrete(int electric_field, int aspect_angle, double x) const;
     double compute_dist(double electric_field, int aspect_angle, double v) const;
+    double compute_dist2(double electric_field, int aspect_angle, double v) const;
     const std::vector<double>& get_ion_thermal_speeds(int aspect_angle) const;
     double compute_integral(double electric_field, int aspect_angle) const; //check
+    
 
     //double compute_integral2(double vmin, double vmax, double electric_field, int aspect_angle) const;
 
@@ -42,6 +44,8 @@ private:
     static constexpr int n_cols = 26, n_angles = 10;
     static constexpr std::string_view delim{"\t\t"};
     static constexpr int order = 6;
+    static constexpr int n_e_vals_ptable = 100'000;
+    static constexpr double d_en = 1.0/n_e_vals_ptable;
 
     int n_files;
     std::filesystem::path dir;
@@ -58,10 +62,13 @@ private:
     //indexed as such: ion_thermal_speeds_interp_coeffs[angle idx][i]
     std::vector<std::array<double, order + 1>> ion_thermal_speeds_interp_coeffs;
 
+
+
     int num_files() const;
     void read_coeffs();
     int extract_number(const std::filesystem::path& p) const;
     void compute_interp_coeffs();
     double eval_poly(const std::array<double, order + 1>& c, double x) const;
     double eval_legendre_series(const std::array<double, n_cols>& coeffs, double x) const;
+
 };
