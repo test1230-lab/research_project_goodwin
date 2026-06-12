@@ -10,4 +10,7 @@
 !ElectricField.h
 !makefile
 
+!coeffs/
+!coeffs/**
+
 #!README.md
