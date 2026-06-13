@@ -85,14 +85,6 @@ void ElectricField::read_coeffs()
     }
 }
 
-/*const std::vector<double>& ElectricField::get_coeffs(int electric_field, int aspect_angle) const
-{
-    const int aspect_angle_idx = aspect_angle / 10;
-    const int e_idx = (electric_field - 20) / 10;
-
-    return coeffs[aspect_angle_idx][e_idx];
-}*/
-
 double ElectricField::compute_dist_discrete(int electric_field, int aspect_angle, double v) const
 {
     const int aspect_angle_idx = aspect_angle / 10;
@@ -124,42 +116,25 @@ double ElectricField::eval_poly(const std::array<double, order + 1>& c, double x
     return result;
 }
 
-
 double ElectricField::compute_dist(double electric_field, int aspect_angle, double v) const
 {
     const int angle_idx = aspect_angle / 10;
+    electric_field = std::clamp(electric_field, 20.0, 200.0);
     const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
 
     const double ion_thermal_speed_interp = eval_poly(ion_thermal_speeds_interp_coeffs[angle_idx], e_norm);
     const double y = v/ion_thermal_speed_interp;
     double x = y/4.0;
 
-    x = std::clamp(x, -1.0, 1.0);
+    if (std::abs(x) > 1.0)
+    {
+        return 0.0;
+    }
 
     std::array<double, n_cols> coeffs;
     for (int i = 0; i < n_cols; i++)
     {
         coeffs[i] = eval_poly(e_interp_coeffs[angle_idx][i], e_norm);
-    }
-
-    return eval_legendre_series(coeffs, x)/ion_thermal_speed_interp;
-}
-
-double ElectricField::compute_dist2(double electric_field, int aspect_angle, double v) const
-{
-    const int angle_idx = aspect_angle / 10;
-    const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
-
-    const double ion_thermal_speed_interp = get_ion_thermal_speed_lin_interp(e_norm, angle_idx);
-    const double y = v/ion_thermal_speed_interp;
-    double x = y/4.0;
-
-    x = std::clamp(x, -1.0, 1.0);
-
-    std::array<double, n_cols> coeffs;
-    for (int i = 0; i < n_cols; i++)
-    {
-        coeffs[i] = get_e_coeff_lin_interp(e_norm, angle_idx, i);
     }
 
     return eval_legendre_series(coeffs, x)/ion_thermal_speed_interp;
@@ -186,7 +161,6 @@ double ElectricField::eval_legendre_series(const std::array<double, n_cols>& coe
 
     return sum;
 }
-
 
 const std::vector<double>& ElectricField::get_ion_thermal_speeds(int aspect_angle) const
 {
@@ -251,22 +225,9 @@ void ElectricField::compute_interp_coeffs()
     
 }
 
-
 double ElectricField::compute_integral(double electric_field, int aspect_angle) const
 {
     const int angle_idx = aspect_angle / 10;
     const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
     return 8.0*eval_poly(e_interp_coeffs[angle_idx][0], e_norm);
 }
-
-
-
-
-
-
-
-
-
-
-
-

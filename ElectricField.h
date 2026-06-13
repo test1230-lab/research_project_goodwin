@@ -20,7 +20,7 @@
 class ElectricField
 {
 public:
-    ElectricField(std::string directory) : e_interp_coeffs{}, ion_speed_interp_table{}, e_coeff_interp_table{}
+    ElectricField(std::string directory) : e_interp_coeffs{}
     {
         this->dir = directory;
         this->n_files = num_files();
@@ -36,9 +36,6 @@ public:
     double compute_dist2(double electric_field, int aspect_angle, double v) const;
     const std::vector<double>& get_ion_thermal_speeds(int aspect_angle) const;
     double compute_integral(double electric_field, int aspect_angle) const; //check
-    
-
-    //double compute_integral2(double vmin, double vmax, double electric_field, int aspect_angle) const;
 
 private:
     static constexpr int n_cols = 26, n_angles = 10;

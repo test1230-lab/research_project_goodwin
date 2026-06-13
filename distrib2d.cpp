@@ -1,6 +1,5 @@
 #include "distrib2d.h"
 #include <iostream>
-//sloppy and slow at the moment
 
 double sqr(double x)
 {
@@ -237,7 +236,7 @@ double Distrib2D::calc_ion_temp_par(double t, double dz, double density, double 
 			const double f_vf_perp = distribution_function(vf_perp, bnd_density, t - dt, 90);
 			const double dist_2d = f_vf_par*f_vf_perp/bnd_density;
 			
-			integral += sqr(vf_par - avg_vel_par)*dist_2d;
+			integral += wi*wj*sqr(vf_par - avg_vel_par)*dist_2d;
         }
     }
 	
@@ -247,7 +246,7 @@ double Distrib2D::calc_ion_temp_par(double t, double dz, double density, double 
 //optimize this and above func
 double Distrib2D::calc_ion_temp_perp(double t, double dz, double density, double avg_vel_par, double avg_vel_perp) const
 {
-		double integral = 0.0;
+	double integral = 0.0;
 
     for (int i = 0; i < nv; i++)
     {
@@ -265,7 +264,7 @@ double Distrib2D::calc_ion_temp_perp(double t, double dz, double density, double
 			const double f_vf_perp = distribution_function(vf_perp, bnd_density, t - dt, 90);
 			const double dist_2d = f_vf_par*f_vf_perp/bnd_density;
 			
-			integral += sqr(vf_perp - avg_vel_perp)*dist_2d;
+			integral += wi*wj*sqr(vf_perp - avg_vel_perp)*dist_2d;
         }
     }
 	

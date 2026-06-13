@@ -287,10 +287,10 @@ int main()
     
     const double t1 = 0.0;
 	const double t2 = 1000.0;
-	const double dt = 2.0;
+	const double dt = 5;
 
-    const double vmin = -3000.0;
-    const double vmax = 3000.0;
+    const double vmin = -5000.0;
+    const double vmax = -vmin;
     const double dv = 10.0;
     
 
@@ -308,7 +308,7 @@ int main()
     plot1d(times, ef, "Electric Field Magnitude", "time [s]", "|E| [mV/m]");*/
 
     std::vector<double> times = dist.calc_times(t1, t2, dt);
-    //auto start = std::chrono::steady_clock::now();
+    auto start = std::chrono::steady_clock::now();
 
     
     Distrib2D::Moments m = dist.get_moments(t1, t2, dt, dz);
@@ -320,11 +320,11 @@ int main()
         const double t = i;
         titles.push_back(std::to_string((int)t));
         dists.push_back(dist.get_f_vf_dist(t, dz));
-    }
+    }*/
 
     auto end = std::chrono::steady_clock::now();
     uint64_t elapsed1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << elapsed1/1000.0 << "[s]\n";*/
+    std::cout << elapsed1/1000.0 << "[s]\n";
     
     const std::string param = std::format("for dz={:.1f}km", dz/1000.0);
     plot1d(times, m.density, "Density " + param, "t [s]", "Density [m^-3]");
