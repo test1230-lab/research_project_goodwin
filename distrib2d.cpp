@@ -1,5 +1,4 @@
 #include "distrib2d.h"
-#include <iostream>
 
 double sqr(double x)
 {
@@ -32,7 +31,6 @@ double Distrib2D::maxwell_boltzmann_dist(double v) const
 }
 
 //TODO: check!!!
-//what angle!?
 //maybe precompute and interpolate
 double Distrib2D::distribution_function(double v, double n, double t, int angle) const
 {
@@ -48,13 +46,19 @@ double Distrib2D::distribution_function(double v, double n, double t, int angle)
 
 	const double integral = ef.compute_integral(efield, angle);
 	return n*ef.compute_dist(efield, angle, v)/integral;
+
+	//return n*maxwell_boltzmann_dist(v);
 }
-
-
 
 double Distrib2D::boundary_density(double t) const
 {
 	return 1e12;
+
+	/*if (t < 0.0)
+	{
+		return 1e12;
+	}
+	return std::clamp(1e12*std::pow(0.5, t/200.0), 0.5e12, 1e12);*/
 }
 
 double Distrib2D::calc_dt(double vi, double vf, double t) const
@@ -82,22 +86,6 @@ double Distrib2D::compute_f_vf_perp(double vf_par, double vf_perp, double t, dou
 	const double dt = calc_dt(compute_vi_par(vf_par, t, dz), vf_par, t);
 	return distribution_function(vi, boundary_density(t - dt), t - dt, 90);
 }
-
-/*
-double Distrib2D::compute_f_vf_2d(double vf_par, double vf_perp, double t, double dz) const
-{
-	const double vi_perp = vf_perp; //no forces acting on it
-	const double vi_par = compute_vi_par(vf_par, t, dz);
-	const double dt = calc_dt(vi_par, vf_par, t); //same particle
-
-	const double density = boundary_density(t - dt);
-
-	const double f_vf_par = distribution_function(vi_par, density, t - dt, 0);
-	const double f_vf_perp = distribution_function(vi_perp, density, t - dt, 90);
-
-	//TODO: is this correct?
-	return f_vf_par*f_vf_perp/density;
-}*/
 
 std::vector<std::vector<double>> Distrib2D::get_f_vf_dist(double t, double dz) const
 {
@@ -184,6 +172,7 @@ double Distrib2D::calc_avg_velocity_perp(double t, double dz, double density) co
 		const double vf_par = vf_par_vec[i];
 		const double vi_par = compute_vi_par(vf_par, t, dz);
 		const double dt = calc_dt(vi_par, vf_par, t); //same particle
+		if (t - dt < 0.0) continue;
 		const double bnd_density = boundary_density(t - dt);
 		const double f_vf_par = distribution_function(vi_par, bnd_density, t - dt, 0);
 
@@ -200,7 +189,6 @@ double Distrib2D::calc_avg_velocity_perp(double t, double dz, double density) co
 
     return dv*dv*integral/density;
 }
-
 
 //utility function
 std::vector<double> Distrib2D::calc_times(double t1, double t2, double dt) const
@@ -251,6 +239,8 @@ double Distrib2D::calc_ion_temp_perp(double t, double dz, double density, double
     for (int i = 0; i < nv; i++)
     {
 		const double vf_par = vf_par_vec[i];
+
+
 		const double vi_par = compute_vi_par(vf_par, t, dz);
 		const double dt = calc_dt(vi_par, vf_par, t); //same particle
 		const double bnd_density = boundary_density(t - dt);

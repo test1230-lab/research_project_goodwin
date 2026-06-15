@@ -110,7 +110,7 @@ double ElectricField::eval_poly(const std::array<double, order + 1>& c, double x
 
     for (int k = order - 1; k >= 0; k--)
     {
-        result = result * x + c[k];
+        result = result*x + c[k];
     }
 
     return result;
@@ -124,7 +124,7 @@ double ElectricField::compute_dist(double electric_field, int aspect_angle, doub
 
     const double ion_thermal_speed_interp = eval_poly(ion_thermal_speeds_interp_coeffs[angle_idx], e_norm);
     const double y = v/ion_thermal_speed_interp;
-    double x = y/4.0;
+    const double x = y/4.0;
 
     if (std::abs(x) > 1.0)
     {

@@ -2,10 +2,8 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-#include <format>
 #include <utility>
 #include <tuple>
-#include <limits>
 #include <iomanip>
 #include <fstream>
 #include <chrono>
@@ -289,9 +287,9 @@ int main()
 	const double t2 = 1000.0;
 	const double dt = 5;
 
-    const double vmin = -5000.0;
+    const double vmin = -3000.0;
     const double vmax = -vmin;
-    const double dv = 10.0;
+    const double dv = 5.0;
     
 
     Distrib2D dist{vmin, vmax, dv, mass, temp, "./coeffs"};
@@ -311,32 +309,43 @@ int main()
     auto start = std::chrono::steady_clock::now();
 
     
-    Distrib2D::Moments m = dist.get_moments(t1, t2, dt, dz);
+    //Distrib2D::Moments m = dist.get_moments(t1, t2, dt, dz);
     
-    /*std::vector<std::vector<std::vector<double>>> dists;
-    std::vector<std::string> titles;
-    for (int i = 0; i < 501; i++)
+    std::vector<std::vector<std::vector<double>>> dists(10);
+    std::vector<std::string> titles(10);
+    #pragma omp parallel for
+    for (int i = 0; i < 9; i++)
     {
-        const double t = i;
-        titles.push_back(std::to_string((int)t));
-        dists.push_back(dist.get_f_vf_dist(t, dz));
+        const double t = 100.0 + 50.0*i;
+        titles[i] =  std::to_string((int)t);
+        dists[i] = dist.get_f_vf_dist(t, dz);
+    }
+
+    /*std::vector<double> bd(times.size());
+    for (int i = 0; i < times.size(); i++)
+    {
+        const double t = t1 + dt*i;
+        bd[i] = dist.boundary_density(t);
     }*/
 
     auto end = std::chrono::steady_clock::now();
     uint64_t elapsed1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << elapsed1/1000.0 << "[s]\n";
     
-    const std::string param = std::format("for dz={:.1f}km", dz/1000.0);
+    /*const std::string param = std::format("for dz={:.1f}km", dz/1000.0);
     plot1d(times, m.density, "Density " + param, "t [s]", "Density [m^-3]");
     plot1d(times, m.avg_par_velocity, "Parallel Veloctiy " + param, "t [s]", "Velocity [m/s]");
     plot1d_overlay(times, {m.ion_temp_par, m.ion_temp_perp},
              {"Ion Temp Parallel " + param, "Ion Temp Perpendicular " + param}, " ", "t [s]", "Temp [K]");
 
+    plot1d(times, bd, "Boundary Density", "time [s]", "m^-3");*/
 
-    /*for (int i = 0; i < 501; i++)
+
+    for (int i = 0; i < 9; i++)
     {
         write_matrix("./output/" + titles[i] + ".dat", dists[i]);
-    }*/
+    }
 
 	return 0;
 }
+

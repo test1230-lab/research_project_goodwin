@@ -59,8 +59,6 @@ private:
     //indexed as such: ion_thermal_speeds_interp_coeffs[angle idx][i]
     std::vector<std::array<double, order + 1>> ion_thermal_speeds_interp_coeffs;
 
-
-
     int num_files() const;
     void read_coeffs();
     int extract_number(const std::filesystem::path& p) const;
