@@ -3,13 +3,8 @@
 #include <vector>
 #include <numbers>
 
+#include "mdarray.h"
 #include "ElectricField.h"
-
-//TODO
-//I want to have a trapz function for the integration
-//instead of writing the integration every time
-
-//currently a lot of the code is redundant for the parallel/perpendicular functions
 
 class Distrib2D
 {
@@ -17,40 +12,35 @@ public:
 	Distrib2D(double v_min, double v_max, double v_step, double m, double T, std::string coeff_path) : 
 		vf_min(v_min), vf_max(v_max), dv(v_step), mass(m), temp(T), ef(coeff_path)
 	{
-		nv = std::round((vf_max - vf_min) / v_step) + 1;
+		nv = std::round((vf_max - vf_min) / dv) + 1;
 
 		//populate vf arrays
-		vf_par_vec.resize(nv);
+		vf_vec.resize(nv);
 		for (int i = 0; i < nv; i++)
 		{
-			vf_par_vec[i] = vf_min + dv*i;
+			vf_vec[i] = vf_min + dv*i;
 		}
-
-		vf_perp_vec = vf_par_vec; //copy assignment. same, I think it is redundant, even in the future
 	}
 	
 	//moments at time steps
 	struct Moments
 	{
+		Moments(int N) : density(N), avg_par_velocity(N),
+						 ion_temp_par(N) , ion_temp_perp(N){}
+
 		std::vector<double> density;
 		std::vector<double> avg_par_velocity;
 		std::vector<double> ion_temp_par;
 		std::vector<double> ion_temp_perp;
 	};
 
-	std::vector<std::vector<double>> get_f_vf_dist(double t, double dz) const;
+	array2d<double> get_f_vf_dist(double t, double dz) const;
 	Moments get_moments(double t1, double t2, double dt, double dz) const;
 	std::vector<double> calc_times(double t1, double t2, double dt) const;
-	const std::vector<double>& get_vf_par() const { return vf_par_vec; }
-	const std::vector<double>& get_vf_perp() const { return vf_perp_vec; }
-
-	//only public for debugging
-	double electric_field(double t) const; // [mV/m]
-	double boundary_density(double t) const;
 
 private:
 	double vf_max, vf_min, dv, mass, temp;
-	std::vector<double> vf_par_vec, vf_perp_vec;
+	std::vector<double> vf_vec;
 	int nv;
 	ElectricField ef;
 
@@ -60,24 +50,17 @@ private:
 	static constexpr double e_field_ramp_rate = 1.0; //1 mV/m per second
 	static constexpr double e_field_peak = 100.0; //  [mV/m]
 
-	//double electric_field(double t) const; // [mV/m]
+	static constexpr int n_e_vals = 10'000;
+	static constexpr double e_min = 20.0;
+	static constexpr double e_max = 200.0;
+	static constexpr double de = (e_max - e_min)/n_e_vals;
+
+	double electric_field(double t) const; // [mV/m]
+	double boundary_density(double t) const; 
 
 	double maxwell_boltzmann_dist(double v) const;
 	double distribution_function(double v, double n, double t, int angle) const;
-	//double boundary_density(double t) const;
 
 	double calc_dt(double vi, double vf, double t) const;
 	double compute_vi_par(double vf_par, double t, double dz) const;
-	double compute_f_vf_par(double vf_par, double t, double dz) const;
-	double compute_f_vf_perp(double vf_par, double vf_perp, double t, double dz) const;
-	
-	//double compute_f_vf_2d(double vf_par, double vf_perp, double t, double dz) const;
-
-	double calc_density(double t, double dz) const;
-
-	double calc_avg_velocity_par(double t, double dz, double density) const;
-	double calc_avg_velocity_perp(double t, double dz, double density) const;
-
-	double calc_ion_temp_par(double t, double dz, double density, double avg_vel_par, double avg_vel_perp) const;
-	double calc_ion_temp_perp(double t, double dz, double density, double avg_vel_par, double avg_vel_perp) const;
 };

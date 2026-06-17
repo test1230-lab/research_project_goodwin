@@ -1,6 +1,5 @@
 #include "ElectricField.h"
 
-
 int ElectricField::num_files() const
 {
     int n = 0;
@@ -76,7 +75,7 @@ void ElectricField::read_coeffs()
                 for (auto&& elem : std::views::split(line, delim))
                 {
                     const double val = std::stod(std::string(elem.begin(), elem.end()));
-                    coeffs[idx++][n][i] = val;
+                    coeffs[idx++, n, i] = val;
                 }
             }
 
@@ -96,7 +95,7 @@ double ElectricField::compute_dist_discrete(int electric_field, int aspect_angle
     double sum = 0.0;
     for (int i = 0; i < n_cols; i++)
     {
-        const double ci = coeffs[aspect_angle_idx][e_idx][i];
+        const double ci = coeffs[aspect_angle_idx, e_idx, i];
         sum += ci*std::legendre(i*2, y/4.0);
     }
 
@@ -110,7 +109,8 @@ double ElectricField::eval_poly(const std::array<double, order + 1>& c, double x
 
     for (int k = order - 1; k >= 0; k--)
     {
-        result = result*x + c[k];
+        //result = result*x + c[k];
+        result = std::fma(result, x, c[k]);
     }
 
     return result;
@@ -131,21 +131,21 @@ double ElectricField::compute_dist(double electric_field, int aspect_angle, doub
         return 0.0;
     }
 
-    std::array<double, n_cols> coeffs;
+    std::array<double, n_cols> coeffs_;
     for (int i = 0; i < n_cols; i++)
     {
-        coeffs[i] = eval_poly(e_interp_coeffs[angle_idx][i], e_norm);
+        coeffs_[i] = eval_poly(e_interp_coeffs[angle_idx][i], e_norm);
     }
 
-    return eval_legendre_series(coeffs, x)/ion_thermal_speed_interp;
+    return eval_legendre_series(coeffs_, x)/ion_thermal_speed_interp;
 }
 
-double ElectricField::eval_legendre_series(const std::array<double, n_cols>& coeffs, double x) const
+/*double ElectricField::eval_legendre_series(const std::array<double, n_cols>& coeffs, double x) const
 {
     double sum = coeffs[0];
     double pn1 = 1.0;
     double p = x;
-
+    
     for (int i = 1; i < 2*(n_cols - 1); i++)
     {
         const double pnext = ((2.0*i + 1)*x*p - i*pn1)/(i + 1.0);
@@ -154,8 +154,27 @@ double ElectricField::eval_legendre_series(const std::array<double, n_cols>& coe
 
         if (i % 2 == 1)
         {
-            const int idx = (i + 1)/2;
-            sum += p*coeffs[idx];
+            sum += p*coeffs[(i + 1)/2];
+        }
+    }
+
+    return sum;
+}*/
+
+
+double ElectricField::eval_legendre_series(const std::array<double, n_cols>& c, double x) const 
+{
+    double sum = c[0];
+    double pm1 = 1.0;   // P_{i-1}
+    double p   = x;     // P_i  (i = 1)
+
+    for (int i = 1; i < 2*(n_cols - 1); i++) 
+    {
+        const double pnext = leg_a[i]*x*p - leg_b[i]*pm1;  //no division
+        pm1 = p; p = pnext;
+        if (i % 2 == 1)
+        {
+            sum = std::fma(p, c[(i + 1)/2], sum);
         }
     }
 
@@ -199,7 +218,7 @@ void ElectricField::compute_interp_coeffs()
             //remap coeff array to more useful format
             for (int i = 0; i < n_files; i++)
             {
-                e_coeffs_at_angle[i] = coeffs[angle_idx][i][coeff_idx];
+                e_coeffs_at_angle[i] = coeffs[angle_idx, i, coeff_idx];
             }     
 
             auto ys = Eigen::Map<const Eigen::VectorXd>(e_coeffs_at_angle.data(),
