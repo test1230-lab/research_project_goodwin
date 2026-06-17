@@ -8,9 +8,9 @@ class array3d
 public:
     array3d() = default;
     array3d(std::size_t N, std::size_t M, std::size_t P) 
-        : vec(N*M*P), N(N), M(M), P(P){}
+        : N(N), M(M), P(P), vec(N*M*P){}
     array3d(std::size_t N, std::size_t M, std::size_t P, T val) 
-        : vec(N*M*P, val), N(N), M(M), P(P){}
+        : N(N), M(M), P(P), vec(N*M*P, val){}
 
     T& operator[](std::size_t i, std::size_t j, std::size_t k) noexcept
     {
@@ -59,9 +59,9 @@ class array2d
 public:
     array2d() = default;
     array2d(std::size_t N, std::size_t M) 
-        : vec(N*M), N(N), M(M){}
+        : N(N), M(M), vec(N*M){}
     array2d(std::size_t N, std::size_t M, T val) 
-        : vec(N*M, val), N(N), M(M){}
+        : N(N), M(M), vec(N*M, val){}
 
     T& operator[](std::size_t i, std::size_t j) noexcept
     {

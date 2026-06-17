@@ -1,7 +1,7 @@
 CXX = g++
 
-CXXFLAGS = -O3 -march=native -std=c++23 -fopenmp -flto=4 
-LDFLAGS  = -fopenmp -flto=4 -lboost_filesystem -lboost_iostreams
+CXXFLAGS = -O3 -march=native -std=c++23 -fopenmp -flto=4 -Wall
+LDFLAGS  = -fopenmp -flto=4
 
 TARGET = main2
 
