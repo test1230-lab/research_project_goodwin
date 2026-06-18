@@ -9,8 +9,8 @@
 class Distrib2D
 {
 public:
-	Distrib2D(double v_min, double v_max, double v_step, double m, double T, std::string coeff_path) : 
-		vf_min(v_min), vf_max(v_max), dv(v_step), mass(m), temp(T), ef(coeff_path)
+	Distrib2D(double v_min, double v_max, double v_step, double m, std::string coeff_path) : 
+		vf_min(v_min), vf_max(v_max), dv(v_step), mass(m), ef(coeff_path)
 	{
 		nv = std::round((vf_max - vf_min) / dv) + 1;
 
@@ -39,7 +39,7 @@ public:
 	std::vector<double> calc_times(double t1, double t2, double dt) const;
 
 private:
-	double vf_min, vf_max, dv, mass, temp;
+	double vf_min, vf_max, dv, mass;
 	std::vector<double> vf_vec;
 	int nv;
 	ElectricField ef;
@@ -53,7 +53,6 @@ private:
 	double electric_field(double t) const; // [mV/m]
 	double boundary_density(double t) const; 
 
-	double maxwell_boltzmann_dist(double v) const;
 	double distribution_function(double v, double n, double t, int angle) const;
 
 	double calc_dt(double vi, double vf, double t) const;

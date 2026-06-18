@@ -24,21 +24,12 @@ double Distrib2D::electric_field(double t) const
     return std::max(0.0, e_field_peak - (ramp - e_field_peak));   // falling edge, min of 0
 }
 
-double Distrib2D::maxwell_boltzmann_dist(double v) const
-{
-	const double T = temp;
-    const double a = std::sqrt(mass / (2.0*pi*kb*T));
-    return a*std::exp(-mass*v*v / (2.0*kb*T));
-}
-
 //maybe precompute and interpolate
 double Distrib2D::distribution_function(double v, double n, double t, int angle) const
 {
 	const double efield = electric_field(t);
 	const double integral = ef.compute_integral(efield, angle);
 	return n*ef.compute_dist(efield, angle, v)/integral;
-
-	//return n*maxwell_boltzmann_dist(v);
 }
 
 double Distrib2D::boundary_density(double t) const

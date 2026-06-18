@@ -169,7 +169,6 @@ void ElectricField::read_coeffs_new_fmt()
         if (entry.is_regular_file()) 
         {
             std::ifstream in(entry.path());
-            std::print("path:{}\n", entry.path().string());
             std::string line;
 
             //skip line 1-8 inclusive
@@ -368,4 +367,3 @@ double ElectricField::compute_integral(double electric_field, int aspect_angle) 
     const double e_norm = 2.0*((electric_field - e_field_vals[0])/(e_field_vals[n_files - 1] - e_field_vals[0])) - 1.0;
     return 8.0*eval_poly(e_interp_coeffs[angle_idx][0], e_norm);
 }
-

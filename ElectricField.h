@@ -12,6 +12,7 @@
 #include <cmath>
 #include <array>
 #include <print>
+#include <boost/math/interpolators/makima.hpp>
 
 #include "mdarray.h"
 
@@ -42,9 +43,7 @@ public:
 private:
     static constexpr int n_cols = 26, n_angles = 10;
     static constexpr std::string_view delim{"\t\t"};
-    static constexpr int order = 6;
-    static constexpr int n_e_vals_ptable = 100'000;
-    static constexpr double d_en = 1.0/n_e_vals_ptable;
+    static constexpr int order = 5;
 
     static constexpr std::array<double, 2*n_cols> leg_a = [] {
         std::array<double, 2*n_cols> a{};
@@ -57,10 +56,12 @@ private:
         for (int i = 1; i < 2*(n_cols - 1); i++) b[i] = double(i)/(i + 1.0);
         return b;
     }();
+    
 
     int n_files;
     std::filesystem::path dir;
     std::vector<double> e_field_vals;
+
     //"coeffs" is indexed as such: coeffs[aspect angle idx][e field idx][i]
     //"ion_thermal_speeds" is indexed as such: ion_thermal_speeds[aspect angle idx][e field idx]
     array3d<double> coeffs;
