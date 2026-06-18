@@ -11,6 +11,7 @@
 #include <utility>
 #include <cmath>
 #include <array>
+#include <print>
 
 #include "mdarray.h"
 
@@ -27,7 +28,8 @@ public:
         this->n_files = num_files();
         coeffs.resize(n_angles, n_files, n_cols);
         ion_thermal_speeds.resize(n_angles, std::vector<double>(n_files));
-        read_coeffs();
+        //read_coeffs();
+        read_coeffs_new_fmt();
         compute_interp_coeffs();
     }
 
@@ -35,6 +37,7 @@ public:
     double compute_dist(double electric_field, int aspect_angle, double v) const;
     const std::vector<double>& get_ion_thermal_speeds(int aspect_angle) const;
     double compute_integral(double electric_field, int aspect_angle) const; //check
+    void print_coeffs() const;
 
 private:
     static constexpr int n_cols = 26, n_angles = 10;
@@ -72,6 +75,7 @@ private:
 
     int num_files() const;
     void read_coeffs();
+    void read_coeffs_new_fmt();
     int extract_number(const std::filesystem::path& p) const;
     void compute_interp_coeffs();
     double eval_poly(const std::array<double, order + 1>& c, double x) const;

@@ -35,15 +35,6 @@ double Distrib2D::maxwell_boltzmann_dist(double v) const
 double Distrib2D::distribution_function(double v, double n, double t, int angle) const
 {
 	const double efield = electric_field(t);
-	if (efield < 20.0)
-	{
-		const double u = std::clamp(efield/20.0, 0.0, 1.0);
-		const double integral = ef.compute_integral(20.0, angle);
-		const double f_e20 = ef.compute_dist(20.0, angle, v)/integral;
-		const double f_maxwellian = maxwell_boltzmann_dist(v);
-		return n*(f_maxwellian + u * (f_e20 - f_maxwellian));
-	}
-
 	const double integral = ef.compute_integral(efield, angle);
 	return n*ef.compute_dist(efield, angle, v)/integral;
 
@@ -53,12 +44,22 @@ double Distrib2D::distribution_function(double v, double n, double t, int angle)
 double Distrib2D::boundary_density(double t) const
 {
 	return 1e12;
+	const double a = 1e12;
 
 	if (t < 0.0)
 	{
+		return a;
+	}
+
+	return a + (t/1000.0)*a;
+
+	//return 1e12;
+
+	/*if (t < 0.0)
+	{
 		return 1e12;
 	}
-	return std::clamp(1e12*std::pow(0.5, t/200.0), 0.5e12, 1e12);
+	return std::clamp(1e12*std::pow(0.5, t/200.0), 0.5e12, 1e12);*/
 }
 
 double Distrib2D::calc_dt(double vi, double vf, double t) const

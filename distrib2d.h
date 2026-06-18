@@ -39,7 +39,7 @@ public:
 	std::vector<double> calc_times(double t1, double t2, double dt) const;
 
 private:
-	double vf_max, vf_min, dv, mass, temp;
+	double vf_min, vf_max, dv, mass, temp;
 	std::vector<double> vf_vec;
 	int nv;
 	ElectricField ef;
@@ -49,11 +49,6 @@ private:
 	static constexpr double acceleration = -5.0; //m s^-2
 	static constexpr double e_field_ramp_rate = 1.0; //1 mV/m per second
 	static constexpr double e_field_peak = 100.0; //  [mV/m]
-
-	static constexpr int n_e_vals = 10'000;
-	static constexpr double e_min = 20.0;
-	static constexpr double e_max = 200.0;
-	static constexpr double de = (e_max - e_min)/n_e_vals;
 
 	double electric_field(double t) const; // [mV/m]
 	double boundary_density(double t) const; 

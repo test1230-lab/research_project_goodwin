@@ -11,6 +11,8 @@ int ElectricField::num_files() const
         }
     }
 
+    std::print("{} coefficient files in directory\n", n);
+
     return n;
 }
 
@@ -27,6 +29,65 @@ int ElectricField::extract_number(const std::filesystem::path& p) const
 
     return std::stoi(name.substr(pos + 1));
 }
+
+/*
+void ElectricField::read_coeffs()
+{
+    std::vector<std::pair<int, std::filesystem::path>> files;
+
+    for (const auto& entry : std::filesystem::directory_iterator(dir))
+    {
+        if (entry.is_regular_file())
+        {
+            const int num = extract_number(entry.path());
+            e_field_vals.push_back(static_cast<double>(num));
+            files.push_back({num, entry.path()});
+        }
+    }
+
+    std::sort(files.begin(), files.end());
+    std::sort(e_field_vals.begin(), e_field_vals.end());
+
+    int n = 0;
+    for (const auto& file : files)
+    {
+        std::filesystem::directory_entry entry(file.second);
+        if (entry.is_regular_file()) 
+        {
+            std::ifstream in(entry.path());
+            std::string line;
+
+            //skip line 1,2
+            std::getline(in, line);
+            std::getline(in, line);
+
+            //get ion thermal speeds
+            std::getline(in, line);
+            int idx = 0;
+            for (auto&& elem : std::views::split(line, delim))
+            {
+                const double val = std::stod(std::string(elem.begin(), elem.end()));
+                ion_thermal_speeds[idx++][n] = val;
+            }
+
+            //get coeffs
+            for (int i = 0; i < n_cols; i++)
+            {
+                std::getline(in, line);
+                idx = 0;
+                for (auto&& elem : std::views::split(line, delim))
+                {
+                    const double val = std::stod(std::string(elem.begin(), elem.end()));
+                    coeffs[idx++, n, i] = val;
+                }
+            }
+
+            n++;
+        }
+    }
+}
+*/
+
 
 void ElectricField::read_coeffs()
 {
@@ -84,10 +145,89 @@ void ElectricField::read_coeffs()
     }
 }
 
+void ElectricField::read_coeffs_new_fmt()
+{
+    std::vector<std::pair<int, std::filesystem::path>> files;
+
+    for (const auto& entry : std::filesystem::directory_iterator(dir))
+    {
+        if (entry.is_regular_file())
+        {
+            const int num = extract_number(entry.path());
+            e_field_vals.push_back(static_cast<double>(num));
+            files.push_back({num, entry.path()});
+        }
+    }
+
+    std::sort(files.begin(), files.end());
+    std::sort(e_field_vals.begin(), e_field_vals.end());
+
+    int n = 0;
+    for (const auto& file : files)
+    {
+        std::filesystem::directory_entry entry(file.second);
+        if (entry.is_regular_file()) 
+        {
+            std::ifstream in(entry.path());
+            std::print("path:{}\n", entry.path().string());
+            std::string line;
+
+            //skip line 1-8 inclusive
+            for (int i = 0; i < 8; i++)
+            {
+                std::getline(in, line);
+            }
+
+            //get ion thermal speeds
+            std::getline(in, line);
+            int idx = 0;
+            for (auto&& elem : std::views::split(line, delim))
+            {
+                const double val = std::stod(std::string(elem.begin(), elem.end()));
+                ion_thermal_speeds[idx++][n] = val;
+            }
+
+            //get coeffs
+            for (int i = 0; i < 2*n_cols - 1; i++)
+            {
+                std::getline(in, line);
+                if (i % 2 == 0)
+                {
+                    const int coeff_idx = i / 2;
+                    idx = 0;
+                    for (auto&& elem : std::views::split(line, delim))
+                    {
+                        const double val = std::stod(std::string(elem.begin(), elem.end()));
+                        coeffs[idx++, n, coeff_idx] = val;
+                        
+                    }
+                }
+            }
+            
+
+            n++;
+        }
+    }
+}
+
+void ElectricField::print_coeffs() const
+{
+    for (int i = 0; i < n_files; i++)
+    {
+        std::print("E = {}\n", e_field_vals[i]);
+        for (int j = 0; j < n_cols; j++)
+        {
+            std::print("{}\n", coeffs[0, j, i]);
+        }
+    }
+
+    std::print("\n\n");
+}
+
 double ElectricField::compute_dist_discrete(int electric_field, int aspect_angle, double v) const
 {
     const int aspect_angle_idx = aspect_angle / 10;
-    const int e_idx = std::max(0, (electric_field - 20) / 10);
+    const int e_idx = std::max(0, (electric_field) / 10);
 
     //y is vx/b, where vx is the line-of-sight speed and b is the ion thermal speed).
     const double y = v/ion_thermal_speeds[aspect_angle_idx][e_idx];
@@ -119,8 +259,9 @@ double ElectricField::eval_poly(const std::array<double, order + 1>& c, double x
 double ElectricField::compute_dist(double electric_field, int aspect_angle, double v) const
 {
     const int angle_idx = aspect_angle / 10;
-    electric_field = std::clamp(electric_field, 20.0, 200.0);
-    const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
+    electric_field = std::clamp(electric_field, 0.0, 200.0);
+    //const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
+    const double e_norm = 2.0*((electric_field - e_field_vals[0])/(e_field_vals[n_files - 1] - e_field_vals[0])) - 1.0;
 
     const double ion_thermal_speed_interp = eval_poly(ion_thermal_speeds_interp_coeffs[angle_idx], e_norm);
     const double y = v/ion_thermal_speed_interp;
@@ -139,28 +280,6 @@ double ElectricField::compute_dist(double electric_field, int aspect_angle, doub
 
     return eval_legendre_series(coeffs_, x)/ion_thermal_speed_interp;
 }
-
-/*double ElectricField::eval_legendre_series(const std::array<double, n_cols>& coeffs, double x) const
-{
-    double sum = coeffs[0];
-    double pn1 = 1.0;
-    double p = x;
-    
-    for (int i = 1; i < 2*(n_cols - 1); i++)
-    {
-        const double pnext = ((2.0*i + 1)*x*p - i*pn1)/(i + 1.0);
-        pn1 = p;
-        p = pnext;
-
-        if (i % 2 == 1)
-        {
-            sum += p*coeffs[(i + 1)/2];
-        }
-    }
-
-    return sum;
-}*/
-
 
 double ElectricField::eval_legendre_series(const std::array<double, n_cols>& c, double x) const 
 {
@@ -187,16 +306,15 @@ const std::vector<double>& ElectricField::get_ion_thermal_speeds(int aspect_angl
     return ion_thermal_speeds[aspect_angle_idx];
 }
 
-//TODO: CHECK!
 void ElectricField::compute_interp_coeffs()
 {
     std::vector<double> e_coeffs_at_angle(n_files);
     std::vector<double> norm_e_field_vals(n_files);
 
-    //[20, 200] -> [-1, 1]
+    //[0, 200] -> [-1, 1]
     for (int i = 0; i < n_files; i++)
     {
-        norm_e_field_vals[i] = (e_field_vals[i] - 20.0)/90.0 - 1.0;
+        norm_e_field_vals[i] = 2.0*((e_field_vals[i] - e_field_vals[0])/(e_field_vals[n_files - 1] - e_field_vals[0])) - 1.0;
     }
 
     //using code from: https://gist.github.com/tabbott/129a32e965fefd202fb9065a4368986f
@@ -247,6 +365,7 @@ void ElectricField::compute_interp_coeffs()
 double ElectricField::compute_integral(double electric_field, int aspect_angle) const
 {
     const int angle_idx = aspect_angle / 10;
-    const double e_norm = (electric_field - 20.0)/90.0 - 1.0;
+    const double e_norm = 2.0*((electric_field - e_field_vals[0])/(e_field_vals[n_files - 1] - e_field_vals[0])) - 1.0;
     return 8.0*eval_poly(e_interp_coeffs[angle_idx][0], e_norm);
 }
+
